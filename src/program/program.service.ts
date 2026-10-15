@@ -1,9 +1,37 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
+import { DataSource, Repository } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Program } from './entities/program.entity';
 
 @Injectable()
 export class ProgramService {
 
     // TODO Reto 1: inyecta el repositorio de Program (y lo que necesites para las transacciones)
+    private readonly logger = new Logger("StudentService");
+
+    constructor(
+        @InjectRepository(Program)
+        private readonly programRepository: Repository<Program>,
+        private datasource: DataSource
+    ) { }
+
+
+    async findAll() {
+        try {
+            return await this.programRepository.find({
+            });
+        } catch (error) {
+            this.handleException(error);
+        }
+    }
+
+    private handleException(error: any) {
+        this.logger.error(error);
+        if (error.code === '23505') {
+            throw new InternalServerErrorException(error.detail);
+        }
+    }
+
 
     // TODO Reto 1: create(createProgramDto, user) -> guarda el programa
     //   - nombre o código repetido -> 409 Conflict (no 500)
