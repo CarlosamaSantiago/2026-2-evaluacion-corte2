@@ -2,6 +2,8 @@ import { Injectable, InternalServerErrorException, Logger, NotFoundException } f
 import { DataSource, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Program } from './entities/program.entity';
+import { PaginationDto } from './dto/pagination.dto';
+import { CreateProgramDto } from './dto/create-program.dto';
 
 @Injectable()
 export class ProgramService {
@@ -15,10 +17,13 @@ export class ProgramService {
         private datasource: DataSource
     ) { }
 
-
-    async findAll() {
+    // TODO Reto 1: findAll(paginationDto) -> lista paginada (limit / skip)
+    async findAll(paginationDto: PaginationDto) {
         try {
+            const { skip, limit } = paginationDto;
             return await this.programRepository.find({
+                take: limit,
+                skip: skip
             });
         } catch (error) {
             this.handleException(error);
@@ -35,8 +40,20 @@ export class ProgramService {
 
     // TODO Reto 1: create(createProgramDto, user) -> guarda el programa
     //   - nombre o código repetido -> 409 Conflict (no 500)
+    async createProgram(createProgramDto: CreateProgramDto): Promise<Program | undefined> {
+        try {
+            const { ...programDetails } = createProgramDto;
+            const program = this.programRepository.create({
+                ...programDetails,
+            });
+            await this.programRepository.save(program);
+            return program;
+        } catch (error) {
+            this.handleException(error);
+        }
+    }
 
-    // TODO Reto 1: findAll(paginationDto) -> lista paginada (limit / skip)
+
 
     // TODO Reto 2: findOne(id) -> programa con sus estudiantes, 404 si no existe
 
