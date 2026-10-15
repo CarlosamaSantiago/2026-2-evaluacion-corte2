@@ -8,6 +8,23 @@
 //
 // Usa imports relativos (ej. "../../student/entities/student.entity"), no "src/...":
 // Jest no resuelve el alias "src/" y el test de Student dejaría de correr.
+import { BeforeInsert, BeforeUpdate, Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+@Entity()
 export class Program {
+    @PrimaryGeneratedColumn("uuid")
+    id: string;
 
+    @Column({
+        type: "text",
+        unique: true
+    })
+    name: string;
+
+    @Column({
+        type: "text",
+        unique: true
+    })
+    code: string;
+
+    
 }
