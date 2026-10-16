@@ -8,6 +8,7 @@
 //
 // Usa imports relativos (ej. "../../student/entities/student.entity"), no "src/...":
 // Jest no resuelve el alias "src/" y el test de Student dejaría de correr.
+import { Student } from "src/student/entities/student.entity";
 import { BeforeInsert, BeforeUpdate, Column, Entity, PrimaryGeneratedColumn } from "typeorm";
 @Entity()
 export class Program {
@@ -26,5 +27,11 @@ export class Program {
     })
     code: string;
 
-    
+    @OneToMany(
+        () => Student,
+        (students) => students.program,
+        { cascade: true, eager: true }
+    )
+    students?: Student[]
+
 }

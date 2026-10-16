@@ -33,10 +33,20 @@ export class ProgramController {
   }
 
 
-  
-  
+
+
   // TODO Reto 2: GET    /api/program/:id           -> programa con sus estudiantes
   // TODO Reto 2: PATCH  /api/program/:id/students  -> agregar estudiantes (acumulativo)
+
+  @Patch(":id")
+  @ApiOperation({ summary: "Enroll a student", description: "If students are sent, they are enrolled to the program" })
+  @ApiParam({ name: "id", description: "Program id (UUID)", format: "uuid" })
+  @ApiOkResponse({ description: "Program was updated", type: Program })
+  @ApiBadRequestResponse({ description: "Invalid request body" })
+  @ApiNotFoundResponse({ description: "Program not found" })
+  update(@Param("id") id: string, @Body() assignStudentsDto: AssignStudentsDto) {
+    return this.programService.enrollStudent(id, assignStudentsDto);
+  }
   // TODO Reto 3: POST   /api/program/bulk          -> crear programas en lote (todo o nada)
   // TODO Reto 4: proteger los POST y el PATCH para que solo un admin pueda usarlos
 }
