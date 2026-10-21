@@ -27,16 +27,15 @@ export class Program {
     })
     code: string;
 
-    @Column({
+        @Column({
         type: "int"
     })
     credits: number;
 
     @OneToMany(
         () => Student,
-        (students) => students.program,
-        { cascade: true, eager: true }
+        (student) => student.program
     )
-    students?: Student[]
+    students?: Student[];
 
 }

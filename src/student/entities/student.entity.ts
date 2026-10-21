@@ -96,7 +96,7 @@ export class Student {
     @ManyToOne(
         () => Program,
         (program) => program.students,
-        { onDelete: "CASCADE" }
+        { nullable: true, onDelete: "SET NULL" }
     )
     program?: Program;
 

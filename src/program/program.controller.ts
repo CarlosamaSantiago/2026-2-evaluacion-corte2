@@ -1,6 +1,6 @@
 import { ProgramService } from './program.service';
 import { Program } from './entities/program.entity';
-import { Body, Controller, Get, Param, Patch, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseUUIDPipe, Patch, Post, Query } from '@nestjs/common';
 import { PaginationDto } from './dto/pagination.dto';
 import { Auth } from '../user/decorators/auth.decorator';
 import { ValidRoles } from '../user/enums/valid-roles.enum';
@@ -37,6 +37,15 @@ export class ProgramController {
 
 
   // TODO Reto 2: GET    /api/program/:id           -> programa con sus estudiantes
+    @Get(":id")
+  @ApiOperation({ summary: "Find a program", description: "Returns the program with its students" })
+  @ApiParam({ name: "id", description: "Program id (UUID)", format: "uuid" })
+  @ApiOkResponse({ description: "Program found", type: Program })
+  @ApiBadRequestResponse({ description: "id is not a valid UUID" })
+  @ApiNotFoundResponse({ description: "Program not found" })
+  findOne(@Param("id", ParseUUIDPipe) id: string) {
+    return this.programService.findOne(id);
+  }
   // TODO Reto 2: PATCH  /api/program/:id/students  -> agregar estudiantes (acumulativo)
 
   @Patch(":id")

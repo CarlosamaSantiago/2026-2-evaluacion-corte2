@@ -4,7 +4,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Program } from './entities/program.entity';
 import { PaginationDto } from './dto/pagination.dto';
 import { CreateProgramDto } from './dto/create-program.dto';
-import { isUUID } from 'class-validator';
 import { AssignStudentsDto } from './dto/assign-students.dto';
 
 @Injectable()
@@ -73,20 +72,18 @@ export class ProgramService {
         throw new NotImplementedException('Assign students is being rebuilt (A5)');
     }
 
-    async findOne(term: string) {
-        let program: Program | null;
+    // Reto 2: findOne(id) -> programa con sus estudiantes, 404 si no existe
+    async findOne(id: string): Promise<Program> {
         try {
-            if (isUUID(term)) {
-                program = await this.programRepository.findOneBy({ id: term });
-            } else {
-                program = null;
-            }
+            const program = await this.programRepository.findOne({
+                where: { id },
+                relations: { students: true }
+            });
 
             if (!program)
-                throw new NotFoundException(`Student with ${term} not found`);
+                throw new NotFoundException(`Program with id ${id} not found`);
 
             return program;
-
         } catch (error) {
             this.handleException(error);
         }
