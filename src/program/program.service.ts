@@ -1,4 +1,4 @@
-import { Injectable, InternalServerErrorException, Logger, NotFoundException, NotImplementedException } from '@nestjs/common';
+import { ConflictException, HttpException, Injectable, InternalServerErrorException, Logger, NotFoundException, NotImplementedException } from '@nestjs/common';
 import { DataSource, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Program } from './entities/program.entity';
@@ -11,7 +11,7 @@ import { AssignStudentsDto } from './dto/assign-students.dto';
 export class ProgramService {
 
     // TODO Reto 1: inyecta el repositorio de Program (y lo que necesites para las transacciones)
-    private readonly logger = new Logger("StudentService");
+    private readonly logger = new Logger("ProgramService");
 
     constructor(
         @InjectRepository(Program)
@@ -32,22 +32,26 @@ export class ProgramService {
         }
     }
 
-    private handleException(error: any) {
+    private handleException(error: any): never {
+        // 1. Si ya es una excepción HTTP (404, 400, 409...) que lanzamos nosotros, se deja pasar tal cual
+        if (error instanceof HttpException) throw error;
+
         this.logger.error(error);
+
+        // 2. 23505 = unique_violation de Postgres -> el cliente envió un name/code que ya existe
         if (error.code === '23505') {
-            throw new InternalServerErrorException(error.detail);
+            throw new ConflictException(error.detail);
         }
+
+        // 3. Cualquier otra cosa sí es un error del servidor: nunca devolver una respuesta vacía
+        throw new InternalServerErrorException('Unexpected error, check server logs');
     }
 
-
     // TODO Reto 1: create(createProgramDto, user) -> guarda el programa
-    //   - nombre o código repetido -> 409 Conflict (no 500)
-    async createProgram(createProgramDto: CreateProgramDto): Promise<Program | undefined> {
+    //   - nombre o código repetido -> 409 Conflict (no 500) 
+    async createProgram(createProgramDto: CreateProgramDto): Promise<Program> {
         try {
-            const { ...programDetails } = createProgramDto;
-            const program = this.programRepository.create({
-                ...programDetails,
-            });
+            const program = this.programRepository.create(createProgramDto);
             await this.programRepository.save(program);
             return program;
         } catch (error) {
@@ -74,7 +78,7 @@ export class ProgramService {
         try {
             if (isUUID(term)) {
                 program = await this.programRepository.findOneBy({ id: term });
-            } else{
+            } else {
                 program = null;
             }
 

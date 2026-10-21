@@ -4,7 +4,7 @@ import { Body, Controller, Get, Param, Patch, Post, Query } from '@nestjs/common
 import { PaginationDto } from './dto/pagination.dto';
 import { Auth } from '../user/decorators/auth.decorator';
 import { ValidRoles } from '../user/enums/valid-roles.enum';
-import { ApiBadRequestResponse, ApiInternalServerErrorResponse, ApiNotFoundResponse, ApiOkResponse, ApiCreatedResponse, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
+import { ApiBadRequestResponse, ApiConflictResponse, ApiNotFoundResponse, ApiOkResponse, ApiCreatedResponse, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 import { CreateProgramDto } from './dto/create-program.dto';
 import { AssignStudentsDto } from './dto/assign-students.dto';
 
@@ -28,8 +28,8 @@ export class ProgramController {
   @ApiOperation({ summary: "Create a Program", description: "Requires the teacher role" })
   @ApiCreatedResponse({ description: "Program was created", type: Program })
   @ApiBadRequestResponse({ description: "Invalid request body" })
-  @ApiInternalServerErrorResponse({ description: "Program code already exists" })
-    create(@Body() createProgramDto: CreateProgramDto){
+  @ApiConflictResponse({ description: "Program name or code already exists" })
+  create(@Body() createProgramDto: CreateProgramDto) {
     return this.programService.createProgram(createProgramDto);
   }
 
