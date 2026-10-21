@@ -1,7 +1,8 @@
-import { ConflictException, HttpException, Injectable, InternalServerErrorException, Logger, NotFoundException, NotImplementedException } from '@nestjs/common';
-import { DataSource, Repository } from 'typeorm';
+import { ConflictException, HttpException, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
+import { DataSource, In, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Program } from './entities/program.entity';
+import { Student } from '../student/entities/student.entity';
 import { PaginationDto } from './dto/pagination.dto';
 import { CreateProgramDto } from './dto/create-program.dto';
 import { AssignStudentsDto } from './dto/assign-students.dto';
@@ -67,9 +68,49 @@ export class ProgramService {
     //   Mismo patrón del update de estudiantes corregido en clase (combinar las notas):
     //   traer los actuales -> combinar con los nuevos -> guardar la lista completa.
     //   Si algún id no existe: 404 y rollback.
-    async enrollStudent(id: string, assignStudentsDto: AssignStudentsDto) {
-        //lo remplazo porque no compila y está mal, entonces lo construiré correctamente en proximos commits
-        throw new NotImplementedException('Assign students is being rebuilt (A5)');
+    // Reto 2: assignStudents(id, dto) -> AGREGA estudiantes al programa (acumulativo) en una transacción
+    async assignStudents(id: string, assignStudentsDto: AssignStudentsDto): Promise<Program> {
+        const queryRunner = this.datasource.createQueryRunner();
+        await queryRunner.connect();
+        await queryRunner.startTransaction();
+
+        try {
+            // 1. Traer el programa CON los estudiantes que tiene hoy (dentro de la transacción)
+            const program = await queryRunner.manager.findOne(Program, {
+                where: { id },
+                relations: { students: true }
+            });
+            if (!program) throw new NotFoundException(`Program with id ${id} not found`);
+
+            // 2. Quitar ids repetidos dentro de la misma petición
+            const uniqueIds = [...new Set(assignStudentsDto.studentIds)];
+
+            // 3. Traer todos los estudiantes pedidos en UNA consulta y verificar que existan todos
+            const requestedStudents = await queryRunner.manager.findBy(Student, { id: In(uniqueIds) });
+            if (requestedStudents.length !== uniqueIds.length) {
+                const foundIds = new Set(requestedStudents.map(student => student.id));
+                const missingIds = uniqueIds.filter(studentId => !foundIds.has(studentId));
+                throw new NotFoundException(`Students not found: ${missingIds.join(', ')}`);
+            }
+
+            // 4. Combinar: los actuales + solo los nuevos (los que ya estaban no se repiten)
+            const currentStudents = program.students ?? [];
+            const currentIds = new Set(currentStudents.map(student => student.id));
+            const newStudents = requestedStudents.filter(student => !currentIds.has(student.id));
+            program.students = [...currentStudents, ...newStudents];
+
+            // 5. Guardar la lista COMPLETA con el manager de la transacción
+            await queryRunner.manager.save(program);
+            await queryRunner.commitTransaction();
+        } catch (error) {
+            await queryRunner.rollbackTransaction();
+            this.handleException(error);
+        } finally {
+            await queryRunner.release();
+        }
+
+        // 6. Ya confirmada la transacción, devolver el programa actualizado con sus estudiantes
+        return this.findOne(id);
     }
 
     // Reto 2: findOne(id) -> programa con sus estudiantes, 404 si no existe

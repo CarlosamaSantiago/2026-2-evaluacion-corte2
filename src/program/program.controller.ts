@@ -37,7 +37,7 @@ export class ProgramController {
 
 
   // TODO Reto 2: GET    /api/program/:id           -> programa con sus estudiantes
-    @Get(":id")
+  @Get(":id")
   @ApiOperation({ summary: "Find a program", description: "Returns the program with its students" })
   @ApiParam({ name: "id", description: "Program id (UUID)", format: "uuid" })
   @ApiOkResponse({ description: "Program found", type: Program })
@@ -47,6 +47,19 @@ export class ProgramController {
     return this.programService.findOne(id);
   }
   // TODO Reto 2: PATCH  /api/program/:id/students  -> agregar estudiantes (acumulativo)
+  // Reto 2: PATCH /api/program/:id/students -> agregar estudiantes (acumulativo)
+  @Patch(":id/students")
+  @ApiOperation({ summary: "Assign students to a program", description: "Adds the students to the program; students already assigned are kept and never duplicated" })
+  @ApiParam({ name: "id", description: "Program id (UUID)", format: "uuid" })
+  @ApiOkResponse({ description: "Program with all its students", type: Program })
+  @ApiBadRequestResponse({ description: "Invalid id or invalid request body" })
+  @ApiNotFoundResponse({ description: "Program or some student not found" })
+  assignStudents(
+    @Param("id", ParseUUIDPipe) id: string,
+    @Body() assignStudentsDto: AssignStudentsDto
+  ) {
+    return this.programService.assignStudents(id, assignStudentsDto);
+  }
 
   @Patch(":id")
   @ApiOperation({ summary: "Enroll a student", description: "If students are sent, they are enrolled to the program" })
