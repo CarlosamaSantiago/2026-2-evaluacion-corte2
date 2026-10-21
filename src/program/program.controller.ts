@@ -4,6 +4,8 @@ import { Body, Controller, Get, Param, ParseUUIDPipe, Patch, Post, Query } from 
 import { PaginationDto } from './dto/pagination.dto';
 import { Auth } from '../user/decorators/auth.decorator';
 import { ValidRoles } from '../user/enums/valid-roles.enum';
+import { GetUser } from '../user/decorators/get-user.decorator';
+import { User } from '../user/entities/user.entity';
 import { ApiBadRequestResponse, ApiConflictResponse, ApiNotFoundResponse, ApiOkResponse, ApiCreatedResponse, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 import { CreateProgramDto } from './dto/create-program.dto';
 import { AssignStudentsDto } from './dto/assign-students.dto';
@@ -24,13 +26,16 @@ export class ProgramController {
 
   // TODO Reto 1: POST   /api/program               -> crear programa
   @Post()
-  @Auth(ValidRoles.teacher)
-  @ApiOperation({ summary: "Create a Program", description: "Requires the teacher role" })
+  @Auth(ValidRoles.admin)
+  @ApiOperation({ summary: "Create a program", description: "Requires the admin role. createdBy is taken from the JWT" })
   @ApiCreatedResponse({ description: "Program was created", type: Program })
   @ApiBadRequestResponse({ description: "Invalid request body" })
   @ApiConflictResponse({ description: "Program name or code already exists" })
-  create(@Body() createProgramDto: CreateProgramDto) {
-    return this.programService.createProgram(createProgramDto);
+  create(
+    @Body() createProgramDto: CreateProgramDto,
+    @GetUser() user: User
+  ) {
+    return this.programService.createProgram(createProgramDto, user);
   }
 
 
@@ -49,6 +54,7 @@ export class ProgramController {
   // TODO Reto 2: PATCH  /api/program/:id/students  -> agregar estudiantes (acumulativo)
   // Reto 2: PATCH /api/program/:id/students -> agregar estudiantes (acumulativo)
   @Patch(":id/students")
+  @Auth(ValidRoles.admin)
   @ApiOperation({ summary: "Assign students to a program", description: "Adds the students to the program; students already assigned are kept and never duplicated" })
   @ApiParam({ name: "id", description: "Program id (UUID)", format: "uuid" })
   @ApiOkResponse({ description: "Program with all its students", type: Program })
@@ -59,16 +65,6 @@ export class ProgramController {
     @Body() assignStudentsDto: AssignStudentsDto
   ) {
     return this.programService.assignStudents(id, assignStudentsDto);
-  }
-
-  @Patch(":id")
-  @ApiOperation({ summary: "Enroll a student", description: "If students are sent, they are enrolled to the program" })
-  @ApiParam({ name: "id", description: "Program id (UUID)", format: "uuid" })
-  @ApiOkResponse({ description: "Program was updated", type: Program })
-  @ApiBadRequestResponse({ description: "Invalid request body" })
-  @ApiNotFoundResponse({ description: "Program not found" })
-  update(@Param("id") id: string, @Body() assignStudentsDto: AssignStudentsDto) {
-    return this.programService.enrollStudent(id, assignStudentsDto);
   }
   // TODO Reto 3: POST   /api/program/bulk          -> crear programas en lote (todo o nada)
   // TODO Reto 4: proteger los POST y el PATCH para que solo un admin pueda usarlos

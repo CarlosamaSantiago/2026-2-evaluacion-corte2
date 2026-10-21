@@ -3,6 +3,7 @@ import { DataSource, In, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Program } from './entities/program.entity';
 import { Student } from '../student/entities/student.entity';
+import { User } from '../user/entities/user.entity';
 import { PaginationDto } from './dto/pagination.dto';
 import { CreateProgramDto } from './dto/create-program.dto';
 import { AssignStudentsDto } from './dto/assign-students.dto';
@@ -49,9 +50,12 @@ export class ProgramService {
 
     // TODO Reto 1: create(createProgramDto, user) -> guarda el programa
     //   - nombre o código repetido -> 409 Conflict (no 500) 
-    async createProgram(createProgramDto: CreateProgramDto): Promise<Program> {
+    async createProgram(createProgramDto: CreateProgramDto, user: User): Promise<Program> {
         try {
-            const program = this.programRepository.create(createProgramDto);
+            const program = this.programRepository.create({
+                ...createProgramDto,
+                createdBy: user
+            });
             await this.programRepository.save(program);
             return program;
         } catch (error) {
@@ -68,7 +72,7 @@ export class ProgramService {
     //   Mismo patrón del update de estudiantes corregido en clase (combinar las notas):
     //   traer los actuales -> combinar con los nuevos -> guardar la lista completa.
     //   Si algún id no existe: 404 y rollback.
-    // Reto 2: assignStudents(id, dto) -> AGREGA estudiantes al programa (acumulativo) en una transacción
+    // Reto 2:  (id, dto) -> AGREGA estudiantes al programa (acumulativo) en una transacción
     async assignStudents(id: string, assignStudentsDto: AssignStudentsDto): Promise<Program> {
         const queryRunner = this.datasource.createQueryRunner();
         await queryRunner.connect();

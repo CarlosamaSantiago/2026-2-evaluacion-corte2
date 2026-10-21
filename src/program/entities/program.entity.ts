@@ -9,7 +9,8 @@
 // Usa imports relativos (ej. "../../student/entities/student.entity"), no "src/...":
 // Jest no resuelve el alias "src/" y el test de Student dejaría de correr.
 import { Student } from "../../student/entities/student.entity";
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { User } from "../../user/entities/user.entity";
+import { Column, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 @Entity()
 export class Program {
     @PrimaryGeneratedColumn("uuid")
@@ -27,7 +28,7 @@ export class Program {
     })
     code: string;
 
-        @Column({
+    @Column({
         type: "int"
     })
     credits: number;
@@ -37,5 +38,12 @@ export class Program {
         (student) => student.program
     )
     students?: Student[];
+
+    // Reto 4: relación N:1 con User -> el admin que creó el programa
+    @ManyToOne(
+        () => User,
+        { nullable: true }
+    )
+    createdBy?: User;
 
 }
