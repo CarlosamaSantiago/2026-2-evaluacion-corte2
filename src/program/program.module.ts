@@ -3,6 +3,7 @@ import { ProgramService } from './program.service';
 import { ProgramController } from './program.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Program } from './entities/program.entity';
+import { UserModule } from 'src/user/user.module';
 
 @Module({
   controllers: [ProgramController],
@@ -10,6 +11,7 @@ import { Program } from './entities/program.entity';
   // TODO Reto 4: importa lo necesario para poder usar @Auth() en el controlador
   imports: [
     TypeOrmModule.forFeature([Program]),
+    UserModule
   ],
   providers: [ProgramService],
 })

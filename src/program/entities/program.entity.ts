@@ -27,6 +27,11 @@ export class Program {
     })
     code: string;
 
+    @Column({
+        type: "int"
+    })
+    credits: number;
+
     @OneToMany(
         () => Student,
         (students) => students.program,

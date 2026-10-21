@@ -3,24 +3,22 @@
 //   - code: string de 3 a 6 letras MAYÚSCULAS (ej. "SIS", "MED")
 //   - credits: entero positivo
 
-import {IsString, MaxLength, MinLength, Min, IsNumber, IsPositive, IsUppercase } from "class-validator";
+import { IsInt, IsPositive, IsString, Matches, MinLength } from "class-validator";
 import { ApiProperty } from "@nestjs/swagger";
 
 export class CreateProgramDto {
-    @ApiProperty({ example: "Ingenieria de Sistemas", description: "Program's name", minLength: 8 })
+    @ApiProperty({ example: "Ingenieria de Sistemas", description: "Program's name", minLength: 3 })
     @IsString()
-    @MinLength(8)
+    @MinLength(3)
     name: string;
 
-    @ApiProperty({ example: "SIS", description: "Program's code", minLength: 3, maxLength: 6 })
+    @ApiProperty({ example: "SIS", description: "Program's code: 3 to 6 uppercase letters", pattern: "^[A-Z]{3,6}$" })
     @IsString()
-    @IsUppercase()
-    @MinLength(3)
-    @MaxLength(6)
+    @Matches(/^[A-Z]{3,6}$/, { message: "code must be 3 to 6 uppercase letters (A-Z)" })
     code: string;
 
-    @ApiProperty({ example: 3, description: "Program's credit" })
-    @IsNumber()
+    @ApiProperty({ example: 160, description: "Program's credits (positive integer)", minimum: 1 })
+    @IsInt()
     @IsPositive()
     credits: number;
 }
