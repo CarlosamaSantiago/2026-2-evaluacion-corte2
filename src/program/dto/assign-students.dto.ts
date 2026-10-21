@@ -1,13 +1,14 @@
 // TODO Reto 2: reglas de validación con class-validator
 
-import { IsUUID } from "class-validator";
-import { Student } from "src/student/entities/student.entity";
+import { IsArray, IsString, IsUUID } from "class-validator";
+import { ApiProperty } from "@nestjs/swagger";
+import { Student } from "../../student/entities/student.entity";
 
 //   - studentIds: arreglo NO vacío, cada elemento debe ser un UUID
 export class AssignStudentsDto {
     @ApiProperty({ example: "UUID", description: "Program's id" })
     @IsString()
-    @IsUUID
+    @IsUUID()
     id: string;
 
     @ApiProperty({

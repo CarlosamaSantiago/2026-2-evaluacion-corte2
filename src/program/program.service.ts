@@ -1,4 +1,4 @@
-import { Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, Logger, NotFoundException, NotImplementedException } from '@nestjs/common';
 import { DataSource, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Program } from './entities/program.entity';
@@ -65,35 +65,8 @@ export class ProgramService {
     //   traer los actuales -> combinar con los nuevos -> guardar la lista completa.
     //   Si algún id no existe: 404 y rollback.
     async enrollStudent(id: string, assignStudentsDto: AssignStudentsDto) {
-        const { students, ...programDetails } = assignStudentsDto;
-        const program = await this.programRepository.preload({
-            id: id,
-            ...programDetails
-        })
-
-        if (!program) throw new NotFoundException(`Program with id ${id} not found`);
-
-        const queryRunner = this.datasource.createQueryRunner();
-        await queryRunner.connect();
-        await queryRunner.startTransaction();
-
-        try {
-            if (students) {
-                program.students = students.map(student => this.programRepository.insert(student));
-            }
-
-            await queryRunner.manager.save(program);
-            await queryRunner.commitTransaction();
-            await queryRunner.release();
-
-            return await this.findOne(program.id);
-
-        } catch (error) {
-            await queryRunner.rollbackTransaction();
-            await queryRunner.release();
-            this.handleException(error);
-        }
-
+        //lo remplazo porque no compila y está mal, entonces lo construiré correctamente en proximos commits
+        throw new NotImplementedException('Assign students is being rebuilt (A5)');
     }
 
     async findOne(term: string) {

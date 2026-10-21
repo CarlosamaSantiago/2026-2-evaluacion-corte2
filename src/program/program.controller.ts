@@ -1,11 +1,12 @@
 import { ProgramService } from './program.service';
 import { Program } from './entities/program.entity';
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import { PaginationDto } from './dto/pagination.dto';
-import { Auth } from 'src/user/decorators/auth.decorator';
-import { ValidRoles } from 'src/user/enums/valid-roles.enum';
+import { Auth } from '../user/decorators/auth.decorator';
+import { ValidRoles } from '../user/enums/valid-roles.enum';
 import { ApiBadRequestResponse, ApiInternalServerErrorResponse, ApiNotFoundResponse, ApiOkResponse, ApiCreatedResponse, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
-import { CreateProgram, CreateProgramDto } from './dto/create-program.dto';
+import { CreateProgramDto } from './dto/create-program.dto';
+import { AssignStudentsDto } from './dto/assign-students.dto';
 
 @ApiTags("Programs")
 @Controller('program')
@@ -28,7 +29,7 @@ export class ProgramController {
   @ApiCreatedResponse({ description: "Program was created", type: Program })
   @ApiBadRequestResponse({ description: "Invalid request body" })
   @ApiInternalServerErrorResponse({ description: "Program code already exists" })
-  create(@Body() createProgramDto: CreateProgram) {
+    create(@Body() createProgramDto: CreateProgramDto){
     return this.programService.createProgram(createProgramDto);
   }
 
