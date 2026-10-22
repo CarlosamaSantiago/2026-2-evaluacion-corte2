@@ -1,7 +1,10 @@
-import { ConflictException, HttpException, Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
+import { ConflictException, HttpException, Injectable, InternalServerErrorException, Logger, NotImplementedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { Company } from './entities/company.entity';
+import { User } from '../user/entities/user.entity';
+import { BulkCreateCompanyDto } from './dto/bulk-create-company.dto';
+
 
 @Injectable()
 export class CompanyService {
@@ -13,6 +16,10 @@ export class CompanyService {
         private readonly companyRepository: Repository<Company>,
         private readonly datasource: DataSource
     ) { }
+
+    async bulkCreate(bulkCreateCompanyDto: BulkCreateCompanyDto, user: User): Promise<Company[]> {
+        
+    }
 
     private handleException(error: any): never {
         if (error instanceof HttpException) throw error;
