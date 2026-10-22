@@ -1,7 +1,6 @@
-import { BeforeInsert, BeforeUpdate, Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { BeforeInsert, BeforeUpdate, Column, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 import { Grades } from "./grades.entity";
-import { Program } from "src/program/entities/program.entity";
-import { ManyToOne  } from "typeorm";
+import { Program } from "../../program/entities/program.entity";
 import { ApiHideProperty, ApiProperty } from "@nestjs/swagger";
 
 @Entity()
@@ -97,7 +96,7 @@ export class Student {
     @ManyToOne(
         () => Program,
         (program) => program.students,
-        { onDelete: "CASCADE" }
+        { nullable: true, onDelete: "SET NULL" }
     )
     program?: Program;
 
