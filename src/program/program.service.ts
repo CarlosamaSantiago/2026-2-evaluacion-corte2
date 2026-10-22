@@ -75,7 +75,7 @@ export class ProgramService {
     //   Si algún id no existe: 404 y rollback.
     // Reto 2:  (id, dto) -> AGREGA estudiantes al programa (acumulativo) en una transacción
     async assignStudents(id: string, assignStudentsDto: AssignStudentsDto): Promise<Program> {
-        const queryRunner = this.datasource.createQueryRunner(); ñ
+        const queryRunner = this.datasource.createQueryRunner();
         await queryRunner.connect();
         await queryRunner.startTransaction();
 
