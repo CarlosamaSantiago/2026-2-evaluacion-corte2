@@ -9,6 +9,7 @@ import { User } from '../user/entities/user.entity';
 import { ApiBadRequestResponse, ApiConflictResponse, ApiNotFoundResponse, ApiOkResponse, ApiCreatedResponse, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 import { CreateProgramDto } from './dto/create-program.dto';
 import { AssignStudentsDto } from './dto/assign-students.dto';
+import { BulkCreateProgramDto } from './dto/bulk-create-program.dto';
 
 @ApiTags("Programs")
 @Controller('program')
@@ -67,5 +68,18 @@ export class ProgramController {
     return this.programService.assignStudents(id, assignStudentsDto);
   }
   // TODO Reto 3: POST   /api/program/bulk          -> crear programas en lote (todo o nada)
+  // Reto 3: POST /api/program/bulk -> crear programas en lote (solo admin, todo o nada)
+  @Post("bulk")
+  @Auth(ValidRoles.admin)
+  @ApiOperation({ summary: "Create programs in bulk", description: "Requires the admin role. All or nothing: if one program fails, none is created" })
+  @ApiCreatedResponse({ description: "All programs were created", type: [Program] })
+  @ApiBadRequestResponse({ description: "Empty batch or some program is invalid" })
+  @ApiConflictResponse({ description: "Some name or code already exists or is repeated in the batch" })
+  bulkCreate(
+    @Body() bulkCreateProgramDto: BulkCreateProgramDto,
+    @GetUser() user: User
+  ) {
+    return this.programService.bulkCreate(bulkCreateProgramDto, user);
+  }
   // TODO Reto 4: proteger los POST y el PATCH para que solo un admin pueda usarlos
 }

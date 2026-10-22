@@ -7,6 +7,7 @@ import { User } from '../user/entities/user.entity';
 import { PaginationDto } from './dto/pagination.dto';
 import { CreateProgramDto } from './dto/create-program.dto';
 import { AssignStudentsDto } from './dto/assign-students.dto';
+import { BulkCreateProgramDto } from './dto/bulk-create-program.dto';
 
 @Injectable()
 export class ProgramService {
@@ -74,7 +75,7 @@ export class ProgramService {
     //   Si algún id no existe: 404 y rollback.
     // Reto 2:  (id, dto) -> AGREGA estudiantes al programa (acumulativo) en una transacción
     async assignStudents(id: string, assignStudentsDto: AssignStudentsDto): Promise<Program> {
-        const queryRunner = this.datasource.createQueryRunner();
+        const queryRunner = this.datasource.createQueryRunner(); ñ
         await queryRunner.connect();
         await queryRunner.startTransaction();
 
@@ -135,4 +136,51 @@ export class ProgramService {
     }
     // TODO Reto 3: bulkCreate(bulkCreateProgramDto, user) -> crea todos los programas o ninguno
     //   (transacción). Cualquier nombre/código repetido -> 409 y rollback.
+
+    async bulkCreate(bulkCreateProgramDto: BulkCreateProgramDto, user: User): Promise<Program[]> {
+        const { programs } = bulkCreateProgramDto;
+
+        // 1. Repetidos DENTRO del mismo lote -> 409 antes de tocar la BD
+        this.checkDuplicatesInBatch(programs);
+
+        const queryRunner = this.datasource.createQueryRunner();
+        await queryRunner.connect();
+        await queryRunner.startTransaction();
+
+        try {
+            // 2. Crear las instancias con el admin del token
+            const newPrograms = programs.map(programDto =>
+                queryRunner.manager.create(Program, {
+                    ...programDto,
+                    createdBy: user
+                })
+            );
+
+            // 3. Guardarlas todas en la transacción (name/code existente -> 23505 -> catch -> rollback -> 409)
+            const savedPrograms = await queryRunner.manager.save(newPrograms);
+
+            await queryRunner.commitTransaction();
+            return savedPrograms;
+        } catch (error) {
+            await queryRunner.rollbackTransaction();
+            this.handleException(error);
+        } finally {
+            await queryRunner.release();
+        }
+    }
+
+    private checkDuplicatesInBatch(programs: CreateProgramDto[]) {
+        const names = new Set<string>();
+        const codes = new Set<string>();
+
+        for (const program of programs) {
+            if (names.has(program.name))
+                throw new ConflictException(`Program name "${program.name}" is repeated in the batch`);
+            if (codes.has(program.code))
+                throw new ConflictException(`Program code "${program.code}" is repeated in the batch`);
+
+            names.add(program.name);
+            codes.add(program.code);
+        }
+    }
 }

@@ -1,10 +1,10 @@
-import { ConflictException, HttpException, Injectable, InternalServerErrorException, Logger, NotImplementedException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
+import { ConflictException, HttpException, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common'; import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { Company } from './entities/company.entity';
 import { User } from '../user/entities/user.entity';
 import { BulkCreateCompanyDto } from './dto/bulk-create-company.dto';
 import { CreateCompanyDto } from './dto/create-company.dto';
+import { PaginationDto } from '../student/dto/pagination.dto';
 
 
 @Injectable()
@@ -49,6 +49,32 @@ export class CompanyService {
             this.handleException(error);
         } finally {
             await queryRunner.release();
+        }
+    }
+
+
+    async findAll(paginationDto: PaginationDto): Promise<Company[]> {
+        try {
+            const { limit, skip } = paginationDto;
+            return await this.companyRepository.find({
+                take: limit,
+                skip: skip
+            });
+        } catch (error) {
+            this.handleException(error);
+        }
+    }
+
+    async findOne(id: string): Promise<Company> {
+        try {
+            const company = await this.companyRepository.findOneBy({ id });
+
+            if (!company)
+                throw new NotFoundException(`Company with id ${id} not found`);
+
+            return company;
+        } catch (error) {
+            this.handleException(error);
         }
     }
 
